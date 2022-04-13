@@ -1,6 +1,8 @@
 package simpledb;
 
 import java.io.*;
+import java.util.*;   //Added this package
+
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -19,7 +21,9 @@ public class BufferPool {
     other classes. BufferPool should use the numPages argument to the
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
-
+     int pMax;
+     HashMap <PageId, Page> p;
+    
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
@@ -27,6 +31,8 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
+      p=new HashMap<PageId, Page>();
+      pMax=numPages;
     }
 
     /**
@@ -47,7 +53,38 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         // some code goes here
-        return null;
+        
+      Page pg=null;
+      
+       if (!p.containsKey(pid)) { 
+                
+                if (p.size() == this.pMax)
+                    throw new DbException("Eviction policy in progress");
+        
+      else if(p.size() < this.pMax){
+          HeapFile file = ((HeapFile) Database.getCatalog().getDbFile(pid.getTableId()));
+              
+       if (pid.pageNumber() >= file.numPages()) {
+                   
+                  try {
+                        pg = new HeapPage(((HeapPageId) pid), HeapPage.createEmptyPageData());
+                    } catch (IOException e) {
+                        throw new DbException(e.getMessage());
+                    }
+                } 
+                else {
+                    pg = file.readPage(pid);
+                } p.put(pid, pg); 
+                   
+            } }
+
+          else {
+               pg = p.get(pid);
+                p.remove(pid);
+         }
+            
+              return pg;
+              
     }
 
     /**
