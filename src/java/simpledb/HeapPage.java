@@ -18,9 +18,10 @@ public class HeapPage implements Page {
     byte header[];
     Tuple tuples[];
     int numSlots;
-
     byte[] oldData;
-
+    
+    
+    
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
      * The format of a HeapPage is a set of header bytes indicating
@@ -41,6 +42,7 @@ public class HeapPage implements Page {
         this.pid = id;
         this.td = Database.getCatalog().getTupleDesc(id.getTableId());
         this.numSlots = getNumTuples();
+        
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
         // allocate and read the header slots of this page
@@ -53,7 +55,7 @@ public class HeapPage implements Page {
             tuples = new Tuple[numSlots];
             for (int i=0; i<tuples.length; i++)
                 tuples[i] = readNextTuple(dis,i);
-        }catch(NoSuchElementException e){
+        } catch (NoSuchElementException e) {
             e.printStackTrace();
         }
         dis.close();
@@ -65,8 +67,8 @@ public class HeapPage implements Page {
         @return the number of tuples on this page
     */
     private int getNumTuples() {        
-        // some code goes here
-        return 0;
+        return (int) Math.floor((BufferPool.PAGE_SIZE * 8) / 
+                (td.getSize() * 8 + 1.0));
 
     }
 
@@ -75,10 +77,7 @@ public class HeapPage implements Page {
      * @return the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      */
     private int getHeaderSize() {        
-        
-        // some code goes here
-        return 0;
-                 
+        return (int) Math.ceil(getNumTuples() / 8.0);         
     }
     
     /** Return a view of this page before it was modified
@@ -102,8 +101,7 @@ public class HeapPage implements Page {
      * @return the PageId associated with this page.
      */
     public HeapPageId getId() {
-    // some code goes here
-    throw new UnsupportedOperationException("implement this");
+        return pid;
     }
 
     /**
@@ -234,7 +232,7 @@ public class HeapPage implements Page {
      * @param t The tuple to delete
      */
     public void deleteTuple(Tuple t) throws DbException {
-        // some code goes here
+       // some code goes here
         // not necessary for lab1
     }
 
@@ -246,7 +244,7 @@ public class HeapPage implements Page {
      * @param t The tuple to add.
      */
     public void insertTuple(Tuple t) throws DbException {
-        // some code goes here
+         // some code goes here
         // not necessary for lab1
     }
 
@@ -265,41 +263,65 @@ public class HeapPage implements Page {
     public TransactionId isDirty() {
         // some code goes here
 	// Not necessary for lab1
-        return null;      
+        return null;    
     }
 
     /**
      * Returns the number of empty slots on this page.
      */
     public int getNumEmptySlots() {
-        // some code goes here
-        return 0;
+        int count = 0;
+        int result = 0;
+        
+        for (int i = 0; i < header.length; i++) {
+            byte b = header[i];
+            for (int j = 0; j < 8; j++) {
+                int tmp = 1 << j;
+                result += ((tmp & b) == 0) ? 1 : 0;
+                if (++count == numSlots) {
+                    return result;
+                }
+            }
+        }
+        // should never reach here.
+        return result;
     }
 
     /**
      * Returns true if associated slot on this page is filled.
      */
     public boolean isSlotUsed(int i) {
-        // some code goes here
-        return false;
+        int loc = i / 8;
+        int offset = i % 8;
+        int tmp = 1 << offset;
+        return (header[loc] & tmp) != 0;
     }
 
     /**
      * Abstraction to fill or clear a slot on this page.
      */
     private void markSlotUsed(int i, boolean value) {
-        // some code goes here
-        // not necessary for lab1
+        int loc = i / 8;
+        int offset = i % 8;
+        if (value) {
+            int tmp = 1 << offset;
+            header[loc] |= tmp;
+        } else {
+            int tmp = ~(1 << offset);
+            header[loc] &= tmp;
+        }
     }
-
+    
     /**
      * @return an iterator over all tuples on this page (calling remove on this iterator throws an UnsupportedOperationException)
      * (note that this iterator shouldn't return tuples in empty slots!)
      */
     public Iterator<Tuple> iterator() {
-        // some code goes here
-        return null;
+        List<Tuple> filledTuples = new LinkedList<Tuple>();
+        for (int i = 0; i < tuples.length; ++i)
+            if (isSlotUsed(i))
+                filledTuples.add(tuples[i]);
+        return filledTuples.iterator();
     }
 
 }
-
