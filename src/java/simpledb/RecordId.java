@@ -1,6 +1,7 @@
 package simpledb;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * A RecordId is a reference to a specific tuple on a specific page of a
@@ -19,8 +20,13 @@ public class RecordId implements Serializable {
      * @param tupleno
      *            the tuple number within the page.
      */
+
+    PageId _pid;
+    int _tupleno;
     public RecordId(PageId pid, int tupleno) {
         // some code goes here
+        this._pid=pid;
+        this._tupleno=tupleno;
     }
 
     /**
@@ -28,7 +34,7 @@ public class RecordId implements Serializable {
      */
     public int tupleno() {
         // some code goes here
-        return 0;
+        return _tupleno;
     }
 
     /**
@@ -36,7 +42,7 @@ public class RecordId implements Serializable {
      */
     public PageId getPageId() {
         // some code goes here
-        return null;
+        return _pid;
     }
 
     /**
@@ -48,7 +54,22 @@ public class RecordId implements Serializable {
     @Override
     public boolean equals(Object o) {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+       
+    try {
+
+      if (o == this) {
+            return true;
+        }
+       else if (!(o instanceof RecordId)) {
+            return false;
+        }
+      else {
+        return ((RecordId) o).getPageId().equals(getPageId())
+                && ((RecordId) o).tupleno() == tupleno();
+    }}
+       catch (Exception ex) {
+           throw new UnsupportedOperationException("Issue in RecordId equal method");
+       }
     }
 
     /**
@@ -60,8 +81,16 @@ public class RecordId implements Serializable {
     @Override
     public int hashCode() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
-
+        try {
+       int dt [] = new int[2];
+        dt[0] = _pid.hashCode();
+        dt[1] = _tupleno;
+        return Arrays.hashCode(dt);
+      }
+     catch( Exception ex){
+      throw new UnsupportedOperationException("Error in hashcode method of RecordID");
+     }
+       
     }
 
 }
