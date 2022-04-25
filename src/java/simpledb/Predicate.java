@@ -64,8 +64,15 @@ public class Predicate implements Serializable {
      * @param operand
      *            field value to compare passed in tuples to
      */
+
+    int fieldNumber;
+    Op operator;
+    Field operand;
     public Predicate(int field, Op op, Field operand) {
         // some code goes here
+         this.fieldNumber = field;
+    	this.operator = op;
+    	this.operand = operand;
     }
 
     /**
@@ -74,7 +81,7 @@ public class Predicate implements Serializable {
     public int getField()
     {
         // some code goes here
-        return -1;
+        return this.fieldNumber;
     }
 
     /**
@@ -83,7 +90,7 @@ public class Predicate implements Serializable {
     public Op getOp()
     {
         // some code goes here
-        return null;
+        return this.operator;
     }
     
     /**
@@ -92,7 +99,7 @@ public class Predicate implements Serializable {
     public Field getOperand()
     {
         // some code goes here
-        return null;
+        return this.operand;
     }
     
     /**
@@ -107,7 +114,7 @@ public class Predicate implements Serializable {
      */
     public boolean filter(Tuple t) {
         // some code goes here
-        return false;
+        return t.getField(this.fieldNumber).compare(this.operator, this.operand);
     }
 
     /**
@@ -116,6 +123,12 @@ public class Predicate implements Serializable {
      */
     public String toString() {
         // some code goes here
-        return "";
+       	StringBuffer sb = new StringBuffer("f = ");
+    	sb.append(this.fieldNumber);
+    	sb.append(" op = ");
+    	sb.append(this.operator.toString());
+    	sb.append(" operand = ");
+    	sb.append(this.operand.toString());
+        return sb.toString();
     }
 }
